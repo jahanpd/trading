@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row justify-content-md-center">
+    
+      <div class="col-lg-4">
+        <h1>Open Position</h1>
+        <form action="" method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.assett.label }}<br>
+                {{ form.assett() }}<br>
+
+                {% for error in form.assett.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+
+            </p>
+            <p>
+              {{ form.ticker.label }}<br>
+              {{ form.ticker() }}<br>
+
+              {% for error in form.ticker.errors %}
+              <span style="color: red;">[{{ error }}]</span>
+              {% endfor %}
+
+            </p>
+
+            <p>
+              {{ form.quantity.label }}<br>
+              {{ form.quantity() }}<br>
+
+              {% for error in form.quantity.errors %}
+              <span style="color: red;">[{{ error }}]</span>
+              {% endfor %}
+
+            </p>
+
+            <p>
+                {{ form.datetime_added.label }}<br>
+                {{ form.datetime_added() }}<br>
+
+                {% for error in form.datetime_added.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+
+            </p>
+            <p>{{ form.submit() }}</p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+{% endblock %}

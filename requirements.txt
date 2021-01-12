@@ -1,0 +1,17 @@
+bokeh
+colorcet
+Flask
+Flask-Bootstrap
+Flask-Login
+Flask-WTF
+gunicorn
+matplotlib
+numpy
+pandas
+Pyrebase
+scipy
+tqdm
+WTForms
+yfinance
+html5
+beautifulsoup4

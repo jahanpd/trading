@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row justify-content-md-center">
+      <h1>Portfolio </h1>
+    </div>
+
+    {% if portfolio is none %}
+      <div class="m-5 row justify-content-md-center">
+        <div class="col-md-auto"> 
+          <h4> you need a position! </h4>
+        </div> <div class="w-100"></div>
+        <div class="col-md-auto"> 
+          <a class="btn btn-primary" href="{{ url_for('portfolio.open_position') }}" role="button">Open Position</a>
+        </div>
+        
+      </div>
+      <div class="m-5 row justify-content-md-center">
+        <img src="static/images/hubbard.jpg" alt="Image" class="img-fluid">
+      </div>
+
+    {% else %}
+    <div class="container"> 
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="open-tab" data-toggle="tab" href="#open" role="tab" aria-controls="open" aria-selected="true">Open Positions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Closed Positions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="transactions-tab" data-toggle="tab" href="#transactions" role="tab" aria-controls="transactions" aria-selected="false">Transactions</a>
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <!-- Open Positions -->
+        <div class="tab-pane fade show active" id="open" role="tabpanel" aria-labelledby="open-tab">
+          <div class="m-5 row justify-content-md-center">
+            
+            <div class="col-md-auto"> 
+              <h4> Equities</h4>
+            </div> <div class="w-100"></div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Ticker</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">%</th>
+                    <th scope="col">% AU</th>
+                    <th scope="col">% US</th>
+                    <th scope="col">Vol</th>
+                    {% for key in metrics_short %}
+                      <th scope="col">{{ key + "_s"}}</th>
+                    {% endfor %}
+                    {% for key in metrics_long %}
+                      <th scope="col">{{ key + "_l"}}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                {% for t in tickers %}
+                  {% for d in portfolio %}
+                    {% if d['ticker'] == t and d['assett'] == '1' %}
+                    <tr>
+                      <td scope="col">{{ t }}</td>
+                      <td scope="col">{{ d['name'] }}</td>
+                      <td scope="col">{{ '%0.2f' % d['open_value'] }} {{ d['currency'] }}</td>
+                      <td scope="col">{{ '%0.2f' % update[t]['close_value'] }} {{ d['currency'] }}</td>
+                      {% set perc_change = (((update[t]['close_value']) - d['open_value']) / d['open_value']) %}
+                      {% if perc_change <= 0 %}
+                        <td scope="col" class="text-danger">
+                      {% else %}
+                        <td scope="col">  
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change * 100) }}</td>
+
+                      {% set perc_change_au = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['au_index']) - d['au_index']) / d['au_index']) ) %}
+                      {% if perc_change_au <= 0 %}
+                        <td scope="col" class="text-danger">
+                      {% else %}
+                        <td scope="col">
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_au * 100) }}</td>
+                      
+                      {% set perc_change_us = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['us_index']) - d['us_index']) / d['us_index']) ) %}
+                      {% if perc_change_us <= 0 %}
+                        <td scope="col" class="text-danger">
+                      {% else %}
+                        <td scope="col">
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_us * 100) }}</td>
+                      <td scope="col">{{ '%0.2f' % update[t]['volume'] }}</td>
+                      {% for key in metrics_short %}
+                        <td scope="col">{{ '%0.4f' % metrics_short[key][t] }}</td>
+                      {% endfor %}
+                      {% for key in metrics_long %}
+                        <td scope="col">{{ '%0.4f' % metrics_long[key][t] }}</td>
+                      {% endfor %}
+                    </tr>   
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {% if totals["aus_equity_open"] > totals["aus_equity_close"] %}
+                  <tr class="table-danger">
+                {% else %}
+                  <tr class="table-success">
+                {% endif %}
+                    <td scope="col" colspan=2> AUS Market </td>
+                    <td scope="col"> {{'%0.2f' % totals["aus_equity_open"]}} </td>
+                    <td scope="col"> {{'%0.2f' % totals["aus_equity_close"]}} </td>
+                    <td scope="col" colspan=2> {{ '%0.2f' % ((totals["aus_equity_close"] - totals["aus_equity_open"]) / totals["aus_equity_open"] * 100)}} </td>
+                  </tr>
+                {% if totals["us_equity_open"] > totals["us_equity_close"] %}
+                  <tr class="table-danger">
+                {% else %}
+                  <tr class="table-success">
+                {% endif %}
+                    <td scope="col" colspan=2> US Market </td>
+                    <td scope="col"> {{'%0.2f' % totals["us_equity_open"]}} </td>
+                    <td scope="col"> {{'%0.2f' % totals["us_equity_close"]}} </td>
+                    <td scope="col" colspan=2> {{'%0.2f' % ((totals["us_equity_close"] -  totals["us_equity_open"]) / totals["us_equity_open"] * 100)}} </td>
+                  </tr>
+              </table>
+            </div>
+            <div class="col-md-auto"> 
+              <h4> Cryptocurrency </h4>
+            </div> <div class="w-100"></div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Ticker</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">%</th>
+                    <th scope="col">% AU</th>
+                    <th scope="col">% US</th>
+                    <th scope="col">Vol</th>
+                    {% for key in metrics_short %}
+                      <th scope="col">{{ key + "_s"}}</th>
+                    {% endfor %}
+                    {% for key in metrics_long %}
+                      <th scope="col">{{ key + "_l"}}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                {% for t in tickers %}
+                  {% for d in portfolio %}
+                    {% if d['ticker'] == t and d['assett'] == '2' %}
+                    <tr>
+                      <td>{{ t }}</td>
+                      <td>{{ d['name'] }}</td>
+                      <td>{{ '%0.2f' % d['open_value'] }} {{ d['currency'] }}</td>
+                      <td>{{ '%0.2f' % update[t]['close_value'] }} {{ d['currency'] }}</td>
+                      {% set perc_change = (((update[t]['close_value']) - d['open_value']) / d['open_value']) %}
+                      {% if perc_change <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>  
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change * 100) }}</td>
+
+                      {% set perc_change_au = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['au_index']) - d['au_index']) / d['au_index']) ) %}
+                      {% if perc_change_au <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_au * 100) }}</td>
+                      
+                      {% set perc_change_us = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['us_index']) - d['us_index']) / d['us_index']) ) %}
+                      {% if perc_change_us <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_us * 100) }}</td>
+                      <td>{{ update[t]['volume'] }}</td>
+                      {% for key in metrics_short %}
+                        <td scope="col">{{ '%0.4f' % metrics_short[key][t] }}</td>
+                      {% endfor %}
+                      {% for key in metrics_long %}
+                        <td scope="col">{{ '%0.4f' % metrics_long[key][t] }}</td>
+                      {% endfor %}
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {% if totals["crypto_open"] > totals["crypto_close"] %}
+                  <tr class="table-danger">
+                {% else %}
+                  <tr class="table-success">
+                {% endif %}
+                    <td colspan=2> AUS Market </td>
+                    <td> {{ '%0.2f' % totals["crypto_open"]}} </td>
+                    <td> {{ '%0.2f' % totals["crypto_close"]}} </td>
+                    <td colspan=2> {{ '%0.2f' % ((totals["crypto_close"] -  totals["crypto_open"]) / totals["crypto_open"] * 100)}} </td>
+                  </tr>
+              </table>
+            </div>
+            <div class="col-md-auto"> 
+              <h4> ETFs </h4>
+            </div> <div class="w-100"></div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Ticker</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">%</th>
+                    <th scope="col">% AU</th>
+                    <th scope="col">% US</th>
+                    <th scope="col">Vol</th>
+                    {% for key in metrics_short %}
+                      <th scope="col">{{ key + "_s"}}</th>
+                    {% endfor %}
+                    {% for key in metrics_long %}
+                      <th scope="col">{{ key + "_l"}}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                {% for t in tickers %}
+                  {% for d in portfolio %}
+                    {% if d['ticker'] == t and d['assett'] == '3' %}
+                    <tr>
+                      <td>{{ t }}</td>
+                      <td>{{ d['name'] }}</td>
+                      <td>{{ '%0.2f' % d['open_value'] }} {{ d['currency'] }}</td>
+                      <td>{{ '%0.2f' % update[t]['close_value'] }} {{ d['currency'] }}</td>
+                      {% set perc_change = (((update[t]['close_value']) - d['open_value']) / d['open_value']) %}
+                      {% if perc_change <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>  
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change * 100) }}</td>
+
+                      {% set perc_change_au = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['au_index']) - d['au_index']) / d['au_index']) ) %}
+                      {% if perc_change_au <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_au * 100) }}</td>
+                      
+                      {% set perc_change_us = ((((update[t]['close_value']) - d['open_value']) / d['open_value']) - 
+                      (((update[t]['us_index']) - d['us_index']) / d['us_index']) ) %}
+                      {% if perc_change_us <= 0 %}
+                        <td class="text-danger">
+                      {% else %}
+                        <td>
+                      {% endif %}
+                      {{ '%0.2f' % (perc_change_us * 100) }}</td>
+                      <td>{{ update[t]['volume'] }}</td>
+                      {% for key in metrics_short %}
+                        <td scope="col">{{ '%0.4f' % metrics_short[key][t] }}</td>
+                      {% endfor %}
+                      {% for key in metrics_long %}
+                        <td scope="col">{{ '%0.4f' % metrics_long[key][t] }}</td>
+                      {% endfor %}
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {% if totals["aus_etf_open"] > totals["aus_etf_close"] %}
+                  <tr class="table-danger">
+                {% else %}
+                  <tr class="table-success">
+                {% endif %}
+                    <td colspan=2> AUS Market </td>
+                    <td> {{'%0.2f' % totals["aus_etf_open"]}} </td>
+                    <td> {{'%0.2f' % totals["aus_etf_close"]}} </td>
+                    <td colspan=2> {{ '%0.2f' % ((totals["aus_etf_close"] -  totals["aus_etf_open"]) / totals["aus_etf_open"] * 100)}} </td>
+                  </tr>
+                {% if totals["us_etf_open"] > totals["us_etf_close"] %}
+                  <tr class="table-danger">
+                {% else %}
+                  <tr class="table-success">
+                {% endif %}
+                    <td colspan=2> US Market </td>
+                    <td> {{'%0.2f' % totals["us_etf_open"]}} </td>
+                    <td> {{'%0.2f' % totals["us_etf_close"]}} </td>
+                    <td colspan=2> {{ '%0.2f' % ((totals["us_etf_close"] -  totals["us_etf_open"]) / totals["us_etf_open"] * 100)}} </td>
+                  </tr>
+              </table>
+            </div>
+          </div>
+          <div class="m-5 row justify-content-md-center">
+            <div class="col-md-auto"> 
+            </div> <div class="w-100"></div>
+            <div class="m-5 col-md-auto"> 
+              <a class="btn btn-primary" href="{{ url_for('portfolio.open_position') }}" role="button">Open New Position</a>
+            </div>
+            <div class="m-5 col-md-auto"> 
+              <a class="btn btn-primary" href="{{ url_for('portfolio.open_position') }}" role="button">Close A Position</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Closed Positions -->
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+          ...
+        </div>
+
+        <!-- All transactions -->
+        <div class="tab-pane fade" id="transactions" role="tabpanel" aria-labelledby="transactions-tab">
+            <div class="m-5 row justify-content-md-center">
+              <form action="" method="post">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Ticker</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Purchase Value</th>
+                      <th scope="col">Purchase DateTime</th>
+                      <th scope="col">Delete Transaction</th>
+                      <th scope="col">Edit Transaction</th>
+                    </tr>
+                  </thead>
+                  {% for key in transactions %}
+                      <tr>
+                        <td>{{ transactions[key]['ticker'] }}</td>
+                        <td>{{ transactions[key]['name'] }}</td>
+                        <td>{{ '%0.2f' % transactions[key]['open_value'] }} {{ transactions[key]['currency'] }}</td>
+                        <td>{{ transactions[key]['open_date'] }}</td>
+                        <td class="text-center">
+                          <input type="checkbox" id="{{ key }}" name="{{ key }}" value="delete">
+                        </td>
+                        <td class="text-center">
+                          <input type="checkbox" id="{{ key }}" name="{{ key }}" value="edit">
+                        </td>
+                      </tr>
+                  {% endfor %}
+                  <tr>
+                    <td colspan=6 class="text-center"> 
+                      <input type="submit" value="Submit">
+                    </td>
+                  </tr>
+                </table>
+
+              </form>
+            </div>
+            <div class="m-5 row justify-content-md-center">
+              <div class="col-md-auto"> 
+              </div> <div class="w-100"></div>
+              <div class="m-5 col-md-auto"> 
+                <a class="btn btn-primary" href="{{ url_for('portfolio.open_position') }}" role="button">Open New Position</a>
+              </div>
+              <div class="m-5 col-md-auto"> 
+                <a class="btn btn-primary" href="{{ url_for('portfolio.open_position') }}" role="button">Close A Position</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+
+    {% endif %}
+</div>
+
+{% endblock %}
