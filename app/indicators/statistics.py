@@ -20,8 +20,11 @@ def metrics(prices_series):
     for t in tickers:
         stats = {}
         dat = {}
-        d = prices_series[t].dropna().values
+        d = prices_series[t].values
+        mask = ~np.isnan(d)
         logr = np.log((d[1:] / d[:-1]))
+        logr = logr[~np.isnan(logr)]
+        logr = logr[~np.isinf(logr)]
         dat["data"] = logr.tolist()
         m["mu"][t] = np.mean(logr[-30:])
         m["std"][t] = np.std(logr[-30:])
@@ -32,7 +35,10 @@ def metrics(prices_series):
         fuller = adfuller(logr)
         m["ADF"][t] = fuller[0]
         # calculate hurst exponential
-        H, c, _ = compute_Hc(d, kind='price', simplified=True)
+        try:
+            H, c, _ = compute_Hc(d[mask], kind='price', simplified=True)
+        except Exception as e:
+            H, c = np.nan, np.nan
         m["H"][t] = H
         data[t] = dat
     return m, data

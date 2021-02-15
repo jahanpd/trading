@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, SubmitField, DateTimeField, StringField,\
     FloatField
-from wtforms.validators import DataRequired, InputRequired, ValidationError
+from wtforms.validators import Optional, InputRequired, ValidationError
 import yfinance as yf
 
 def check_ticker(form, field):
@@ -36,8 +36,19 @@ class OpenPosition(FlaskForm):
         default='1'
     )
 
+    price = FloatField(
+        'Price',
+        validators=[Optional()]
+    )
+
+    cost = FloatField(
+        'Brokerage/Cost',
+        validators=[InputRequired()],
+        default='0'
+    )
+
     datetime_added = DateTimeField(
         'DateTime (format=%Y-%m-%d %H:%M:%S)',
         validators=[InputRequired()]
         )
-    submit = SubmitField('Open')
+    submit = SubmitField('Open/Close')

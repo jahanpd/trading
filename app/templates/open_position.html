@@ -6,7 +6,7 @@
     <div class="row justify-content-md-center">
     
       <div class="col-lg-4">
-        <h1>Open Position</h1>
+        <h1>Open or Close Position</h1>
         <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
             <p>
@@ -33,6 +33,26 @@
               {{ form.quantity() }}<br>
 
               {% for error in form.quantity.errors %}
+              <span style="color: red;">[{{ error }}]</span>
+              {% endfor %}
+
+            </p>
+
+            <p>
+              {{ form.price.label }}<br>
+              {{ form.price() }}<br>
+
+              {% for error in form.price.errors %}
+              <span style="color: red;">[{{ error }}]</span>
+              {% endfor %}
+
+            </p>
+
+            <p>
+              {{ form.cost.label }}<br>
+              {{ form.cost() }}<br>
+
+              {% for error in form.cost.errors %}
               <span style="color: red;">[{{ error }}]</span>
               {% endfor %}
 
